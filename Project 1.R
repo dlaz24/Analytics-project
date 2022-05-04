@@ -154,123 +154,8 @@ data.frame
 #Visualising the cluster
 fviz_cluster(km.res, data = df)
 
-####PCA Cluster####
-#Scale data
-df <- scale(ClusterData[, -2])
-#Selecting optimal clusters#
-
-fviz_nbclust(df, kmeans, method = "wss") +
-  geom_vline(xintercept = 3, linetype = 2)+
-  labs(subtitle = "Elbow method")
-#Running a k-means cluster
-set.seed(123)
-km.res2 <- kmeans(df, 3, nstart = 25)
-print(km.res2)
-
-#Generating Confusion matrix
-km.res2$cluster
-cm2 <- table(ClusterData$Position, km.res2$cluster)
-cm2
-
-data.frame2 <- km.res2$centers
-data.frame2
-#Visualising the cluster
-clusplot(df, km.res2$cluster, color=TRUE, shade=TRUE, 
-         labels=2, lines=0)
-
-fviz_cluster(km.res2, data = df)
-
-#PCA 
-install.packages(c("FactoMineR", "factoextra"))
-library("FactoMineR")
-library("factoextra")
-#PCA by removing non-numeric data
-PCA(Defend_data, graph = FALSE)
-d <- ClusterData[, -1] #Remove non-numeric data
-df <- scale(d[, -1]) #Scale the data 
-
-pc1 <- princomp(ClusterData[,c(9:77)], cor=TRUE, score=TRUE)
-pc1 <- princomp(df, cor=TRUE, score=TRUE)
-summary(pc1)
-ggbiplot(pc1)
-pc1$loadings
-
-pc2 <- prcomp(ClusterData[,c(9:77)])
-pc2 <- prcomp(df, cor=TRUE)
-summary(pc2)
-ggbiplot(pc2)
-pc2$x
-
-#Plotting per position - TRY attack, midfield, defend
-pc.position <- c(rep("Forward", 3), rep("Defender",4), rep("Midfield", 7),rep("Defender",3), "Midfield", rep("Forward", 3), rep("Defender",4), rep("Midfield", 3), "Defender", rep("Midfield", 3))
-
-ggbiplot(pc1,ellipse=TRUE,  labels=rownames(ClusterData), groups=ClusterData$`True Position`)
-
-#Defenders PCA
-pc <- princomp(Defend_data[,c(2:45)], cor=TRUE, score=TRUE)
-summary(pc)
-ggbiplot(pc)
-
-
-#Plotting per position - TRY attack, midfield, defend
-pc.position <- c(rep("Forward", 3), rep("Defender",4), rep("Midfield", 7),rep("Defender",3), "Midfield", rep("Forward", 3), rep("Defender",4), rep("Midfield", 3), "Defender", rep("Midfield", 3))
-
-ggbiplot(pc,ellipse=TRUE,  labels=rownames(ClusterData), groups=ClusterData$Position)
-
 #### Regression Analysis ####
-# MultiVariate regression - consider putting all the variables in
-# then remove all that aren't significant, repeating the regression 2/3 times #
-#### Defender Regression (total data)####
-Transfer_fee <- Defend_data$Transfer_fee
-Duels <- Defend_data$`Duels per 90`
-DDuel <- Defend_data$`Defensive duels per 90`
-DefenseA <- Defend_data$`Successful defensive actions per 90`
-Tackle <- Defend_data$`Sliding tackles per 90`
-Block <- Defend_data$`Shots blocked per 90`
-Int <- Defend_data$`Interceptions per 90`
-Foul <- Defend_data$`Fouls per 90`
-Yellow <- Defend_data$`Yellow cards per 90`
-Goal <- Defend_data$`Goals per 90`
-xG <- Defend_data$`xG per 90`
-Assist <- Defend_data$`Assists per 90`
-xA <- Defend_data$`xA per 90`
-Pass <- Defend_data$`Passes per 90`
-KeyPass <- Defend_data$`Key passes per 90`
-PjSlide <- Defend_data$`PAdj Sliding tackles`
-DDuelWon <- Defend_data$`Defensive duels won, %`
-AerialD <- Defend_data$`Aerial duels won, %`
-PassL <- Defend_data$`Accurate lateral passes, %`
-Age2 <- Defend_data$`Age^2`
-Weight <- Defend_data$`Weight [kg]`
-Height <- Defend_data$`Height [cm]`
-Contract <- Defend_data$`Years remaining on contract`
-Model1 <- lm(Transfer_fee~ Age2+Weight+Height+Contract+Duels+DefenseA+Tackle+Block+Int+Foul+Yellow+Goal+xG+Assist+xA+Pass+KeyPass+PjSlide+DDuelWon+AerialD+PassL, data=Defend_data)
-summary(Model1)
-Model2 <-  lm(Transfer_fee~ Age2+Weight+Height+Contract+Duels+DefenseA+Tackle+Block+Int+xA+KeyPass+PjSlide+DDuelWon+AerialD+PassL, data=Defend_data)
-summary(Model2)
-Model3 <-  lm(Transfer_fee~ Weight+Height+Contract+Duels+DefenseA+Tackle+Block+Int+xA+PjSlide+DDuelWon+AerialD+PassL, data=Defend_data)
-summary(Model3)
-ModelA <- lm(Transfer_fee~ ., data = ClusterData) #remove variables
-summary(ModelA)
 
-Weight2 <- Attack_data$Weight
-Contract2 <- Attack_data$`Years remaining on contract`
-Duels2 <- Attack_data$`Duels per 90`
-Int2 <- Attack_data$`Interceptions per 90`
-DDuelW2 <- Attack_data$`Defensive duels won, %`
-AerialD2 <- Attack_data$`Aerial duels won, %`
-#Applying to testing set
-
-Prediction <- predict(Model1, newdata = Defend_Test)
-
-PTV1 <- (-0.914*Weight2 + 4.96355*Contract2 + -2.698*Duels2 + -10*Int2 + -0.798*DDuelW2 + 0.455*AerialD2)
-PTV1
-
-dfTest <- ClusterData[1:99,]
-dfTrain <- ClusterData[100:136,]
-modelB <- lm(Transfer_fee~.,data = dfTest)
-summary(modelB)
-predict(modelB, newdata = dfTrain)
 #### OLS Regressions ####
 #Attack OLS - Benchmark MSE: 0.11 - RMSE: 0.33
 Attack_data<- read_excel("~/OneDrive - University of Leeds/3rd Year/3200 Project/Final_data.xlsx", sheet = 8)
@@ -285,7 +170,7 @@ predictAttk
 Fee1 <- AttkTrain$Log_Fee
 errorAttk <-mean((Fee1 - predictAttk) ^2)
 errorAttk
-
+#Visualise
 par(mfrow=c(2,2))
 plot(modelAttk)
 par(mfrow=c(1,1))
@@ -303,7 +188,7 @@ predictDef
 Fee2 <- DefendTrain$Log_Fee
 errorDef <-mean((Fee2 - predictDef) ^2)
 errorDef 
-
+#visualise
 par(mfrow=c(2,2))
 ggplot(modelDef)
 par(mfrow=c(1,1))
@@ -316,20 +201,11 @@ Plot1 <- ggplot(TransferMarkt, aes(x=Predict1F, y=Results1)) +
   labs(title="Correlation between Predict log(Fee) and Transfermarkt Benchmark Log(Fee)",
        x="Model[1]_Log(Fee)", y = "Transfermarkt_Log(Fee)")
 Plot1
-
+#Results
 Results1 <- TransferMarkt$`Log Predict`
 Results1
 Predict1F <- Predict1L[1:37]
 Predict1F
-#Total Data Regression 
-set.seed(123)
-trainset <- sample(nrow(TotalPreData), 0.7*nrow(TotalPreData))
-testset <- setdiff(seq_len(nrow(TotalPreData)), trainset)
-numeric=c(TotalPreData$Age,TotalPreData$Height,TotalPreData$Weight,TotalPreData$`Years remaining on contract`,TotalPreData$Duels,TotalPreData$Interceptions,TotalPreData$Defensive, TotalPreData$Aerial)
-categoric = c(TotalPreData$Continent, TotalPreData$`Original club continent`)
-Target = c(TotalPreData$Transfer_fee)
-Org_Reg <- lm(Transfer_fee~.,data=Defend_data[trainset,c(Target,numeric,categoric)])
-summary(Org_Reg)
 
 ##Stepwise regression analysis##
 install.packages("tidyverse")
